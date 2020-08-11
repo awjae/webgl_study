@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3d 랜더링 준비</title>
+    <link rel="stylesheet" href="./reset.css"/>
+    <style>
+        #glcanvas {
+            width: calc(100vw - (100vw - 100%));
+            height: calc(100vh - (100vh - 100%));
+            margin:0;
+        }
+    </style>
 </head>
 <body onload="start()">
-    <canvas id="glcanvas" width="640" height="480">
+    <canvas id="glcanvas">
       Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
     </canvas>
     <script>
@@ -32,13 +40,12 @@
 
             gl = initWebGL(canvas);      // Initialize the GL context
             
-            // Only continue if WebGL is available and working
-            
             if (gl) {
                 gl.clearColor(0.0, 0.0, 0.0, 1.0);                      // Set clear color to black, fully opaque
                 gl.enable(gl.DEPTH_TEST);                               // Enable depth testing
                 gl.depthFunc(gl.LEQUAL);                                // Near things obscure far things
-                gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Clear the color as well as the depth buffer.
+                gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);      // Clear the color as well as the depth buffer.
+                gl.viewport(0, 0, canvas.width, canvas.height); //컨텍스트 크기(해상도) 조정
             }
         } 
 
