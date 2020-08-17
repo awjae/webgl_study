@@ -19,3 +19,4 @@
 ----------------------
 참고
 1. https://developer.mozilla.org/ko/docs/Web/API/WebGL_API/Tutorial/Getting_started_with_WebGL
+2. https://webglfundamentals.org/webgl/lessons/ko/webgl-fundamentals.html
