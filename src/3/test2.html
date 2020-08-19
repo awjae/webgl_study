@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+<title>WebGL</title>
+<style>
+  body { background: grey; }
+  canvas { background: white; }
+</style>
+</head>
+<body>
+    <!-- 버텍스 셰이더 작성 -->
+    <script id="2d-vertex-shader" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition; 
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0);
+    }
+    </script>
+
+    <!-- 프래그먼트 셰이더 작성 -->
+    <script id="2d-fragment-shader" type="x-shader/x-fragment">
+    void main(void) {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+    </script>
+<!-- 캔버스 정의 - WebGL의 결과 랜더링 -->
+    <canvas id="my-canvas" width="500" height="500"></canvas>
+    <script>
+        /* 하나의 GLSL 프로그램 만들기 과정 시작 */
+
+
+        var gl = null,
+        canvas = null;
+        canvas = document.getElementById('my-canvas');
+        try{
+          gl = canvas.getContext('webgl') || 
+          canvas.getContext('experimental-webgl');
+        } catch (e){
+        }
+
+        //1. 셰이더의 문자열 가져오기
+        var vertexShaderSource = document.getElementById("2d-vertex-shader").text;
+        var fragmentShaderSource = document.getElementById("2d-fragment-shader").text;
+
+        //2. 셰이더 생성 및 컴파일
+        var vertexShader = makeShader(vertexShaderSource, gl.VERTEX_SHADER),
+            fragmentShader = makeShader(fragmentShaderSource, gl.FRAGMENT_SHADER);
+        function makeShader(src, type) {
+            var shader = gl.createShader(type);
+            gl.shaderSource(shader, src);
+            gl.compileShader(shader);
+            return shader;
+        }
+
+        //3. 2개의 셰이더를 1개의 프로그램에 연결
+        // 프로그램 생성
+        // 프로그램은 vertexShader,fragmentShader 두쌍을 합쳐서 프로그램이라고 합니다.
+        glProgram = gl.createProgram();
+    
+        // 프로그램에 셰이더 첨부 및 연결
+        gl.attachShader(glProgram, vertexShader);
+        gl.attachShader(glProgram, fragmentShader);
+        gl.linkProgram(glProgram);
+
+        
+        /* 하나의 GLSL 프로그램 만들기 과정 종료 */
+
+        //4. 셰이더에서 팜조할 데이터 넣기
+        var triangleVerticeBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticeBuffer);
+
+        var triangleVertices = [
+            // 왼쪽 삼각형
+            -0.5, 0.5, 0.0,
+            0.0, 0.0, 0.0,
+            -0.5, -0.5, 0.0,
+
+            // 오른쪽 삼각형
+            0.5, 0.5, 0.0,
+            0.0, 0.0, 0.0,
+            0.5, -0.5, 0.0
+        ];
+        // 공간 좌표 (x,y,z)이고 값은 캔버스 크기로부터 -1~1 까지 표현된다.
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
+
+        //  애트리뷰트 참고하기
+        var positionAttributeLocation = gl.getAttribLocation(glProgram, "aVertexPosition");
+    </script>
+</body>
+</html>

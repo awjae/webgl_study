@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<title>WebGL</title>
+<style>
+  body { background: grey; }
+  canvas { background: white; }
+</style>
+</head>
+<body>
+<!-- 캔버스 정의 - WebGL의 결과 랜더링 -->
+  <canvas id="my-canvas" width="500" height="500"></canvas>
+  
+<!-- 버텍스 셰이더 작성 -->
+  <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition; 
+    // attribute : 셰이더 변수 종류( attribute | uniform | varying )
+    // vec3 : 배열 타입, vec3는 3행 배열
+    // aVertexPosition : 배열 이름, 한 개의 버텍스를 나타냅니다. 관습적으로 맨 앞에 a를 붙여서 attribute임을 표시를 나타냅니다.
+  
+    void main(void) {
+      gl_Position = vec4(aVertexPosition, 1.0);
+    }
+  </script>
+
+<!-- 프래그먼트 셰이더 작성 -->
+  <script id="shader-fs" type="x-shader/x-fragment">
+    void main(void) {
+      gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+  </script>
+  <script>
+    window.onload = setupWebGL;
+    var gl = null;
+    // gl 은 웹지엘에서 컨텍스트 객체를 참조할 때 관례적으로 사용하는 변수명
+    function setupWebGL() {
+        var canvas = document.getElementById("my-canvas");
+        try{
+            gl = canvas.getContext('experimental-webgl');
+        }catch (e){
+            //컨텍스트 가져오지 못하여 에러 발생시  
+        }
+
+        if(gl){
+        gl.clearColor(1.0, 0.5, 1.0, 1,0);
+        // clearColor(R,G,B,A)
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        }else {
+            alert('WebGL 지원 안함')
+        }
+    }
+  </script>
+</body>
+</html>
