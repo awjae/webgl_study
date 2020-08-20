@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>WebGL</title>
+    <style>
+        body {
+            background: grey;
+        }
+
+        canvas {
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 캔버스 정의 - WebGL의 결과 랜더링 -->
+    <canvas id="my-canvas" width="500" height="500"></canvas>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec4 aVertexPosition;
+    attribute vec4 aVertexColor;
+    varying vec4 v_color;
+  
+    void main(void) {
+      gl_Position = aVertexPosition;
+      v_color = aVertexColor;
+    }
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 v_color;
+        void main(void) {
+        gl_FragColor = v_color;
+        }
+    </script>
+    <script>
+        window.onload = initWebGL();
+        var gl = null,
+            canvas = null,
+            glProgram = null,
+            fragmentShader = null,
+            vertexShader = null;
+
+        var vertexPosition = null,
+            triangleVerticeBuffer = null;
+
+        function initWebGL() {
+            canvas = document.getElementById('my-canvas');
+            try {
+                gl = canvas.getContext('webgl') ||
+                    canvas.getContext('experimental-webgl');
+            } catch (e) {}
+
+            if (gl) {
+                setupWebGL();
+                initShaders();
+                setupBuffer();
+                drawScene();
+            } else {
+                alert('브라우저 지원안함');
+            }
+
+            function setupWebGL() {
+                gl.clearColor(0.1, 0.1, 0.1, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }
+
+            function initShaders() {
+
+                var vs_source = document.getElementById('shader-vs');
+                var fs_source = document.getElementById('shader-fs');
+
+                // 셰이더 컴파일
+                vertexShader = makeShader(vs_source.innerHTML, gl.VERTEX_SHADER);
+                fragmentShader = makeShader(fs_source.innerHTML, gl.FRAGMENT_SHADER);
+
+                // 프로그램 생성
+                // 프로그램은 vertexShader,fragmentShader 두쌍을 합쳐서 프로그램이라고 한다.
+                glProgram = gl.createProgram();
+
+                // 프로그램에 셰이더 첨부 및 연결
+                gl.attachShader(glProgram, vertexShader);
+                gl.attachShader(glProgram, fragmentShader);
+                gl.linkProgram(glProgram);
+
+                // 프로그램을 사용
+                // WebGL이 이 프로그램을 사용가능하게함
+                gl.useProgram(glProgram);
+            }
+
+            function setupBuffer() {
+                var positionsColor = [
+                    1.0, 1.0, 1.0, 1.0, //첫번째 삼각형의 정점 1
+                    1.0, 1.0, 1.0, 1.0, //첫번째 삼각형의 정점 2
+                    -1.0, -1.0, -1.0, 1.0, //첫번째 삼각형의 정점 3
+
+                    0.5, 1.0, 1.0, 1.0, //첫번째 삼각형의 정점 1
+                    1.0, 1.0, 0.0, 1.0, //첫번째 삼각형의 정점 2
+                    0.0, 0.0, -1.0, 1.0, //첫번째 삼각형의 정점 3
+
+                    1.0, 1.0, -0.5, 1.0, //첫번째 삼각형의 정점 1
+                    1.0, 0.7, 1.0, 1.0, //첫번째 삼각형의 정점 2
+                    1.0, -0.3, -1.0, 1.0, //첫번째 삼각형의 정점 3
+                ];
+
+                positionsColorBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionsColorBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionsColor), gl.STATIC_DRAW);
+
+                var triangleVertices = [
+                    // 왼쪽 삼각형
+                    -0.5, -0.9,
+                    -0.5, 0.9,
+                    -0.9, -0.9,
+
+                    0.0, 0.3,
+                    -0.3, -0.3,
+                    0.3, -0.3,
+
+                    0.5, 0.9,
+                    0.5, -0.9,
+                    0.9, -0.9
+                ];
+                // 공간 좌표 (x,y,z)이고 값은 캔버스 크기로부터 -1~1 까지 표현된다.
+                triangleVerticeBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticeBuffer);
+                gl.bufferData(
+                    gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW
+                );
+            }
+
+            function drawScene() {
+                vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
+                colorAttributeLocation = gl.getAttribLocation(glProgram, "aVertexColor");
+                gl.enableVertexAttribArray(vertexPositionAttribute);
+                gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticeBuffer);
+                gl.vertexAttribPointer(vertexPositionAttribute, 2, gl.FLOAT, false, 0, 0);
+
+                gl.enableVertexAttribArray(colorAttributeLocation);
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionsColorBuffer);
+                gl.vertexAttribPointer(colorAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 9); 
+                //gl.drawArrays() 함수를 호출할 때 primitiveType을 TRIANGLES로 지정하였기 때문에 3개의 클립공간의 정점이 생성될 때마다 GPU는 이를 이용해 삼각형을 그리게 됩니다.
+                //래스터화를 할 때 삼각형을 구성하는 각각의 픽셀에 대해서 프래그먼트 셰이더를 호출하게 되는데 이때 프래그먼트 셰이더는 특수변수인 gl_FragColor를 통해 각 픽셀의 색상을 알려주게 됩니다.
+            }
+
+            function makeShader(src, type) {
+                var shader = gl.createShader(type);
+                gl.shaderSource(shader, src);
+                gl.compileShader(shader);
+                return shader;
+            }
+        }
+    </script>
+    <!--
+        
+        varing은 vertexShader에서 만든 데이터를 에서 fragmentShader에게 전달하는데 사용됩니다.
+        
+        프래그먼트 셰이더는 래스터화된 점, 선, 면 등을 구성하는 픽셀 수 만큼 호출된다.
+        버텍스 셰이더에서 설정한 배어링 값은 선의 경우 2점 보간, 삼각형의 경우 3점 보간을 해서
+        프래그먼트 셰이더에게 전달된다(배어링은 보간되어 전달된다는 점이 중요합니다).
+
+    -->
+</body>
+
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+<title>WebGL</title>
+<style>
+  body { background: grey; }
+  canvas { background: white; }
+</style>
+</head>
+<body>
+    <!-- 버텍스 셰이더 작성 -->
+    <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition; 
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0);
+    }
+    </script>
+
+    <!-- 프래그먼트 셰이더 작성 -->
+    <script id="shader-fs" type="x-shader/x-fragment">
+    void main(void) {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+    </script>
+<!-- 캔버스 정의 - WebGL의 결과 랜더링 -->
+    <canvas id="my-canvas" width="500" height="500"></canvas>
+    <script>
+window.onload = initWebGL();
+var gl = null,
+    canvas = null,
+    glProgram = null,
+    fragmentShader =null,
+    vertexShader = null;
+
+var vertexPosition = null,
+    triangleVerticeBuffer = null;
+
+function initWebGL() {
+  canvas = document.getElementById('my-canvas');
+  try{
+    gl = canvas.getContext('webgl') || 
+    canvas.getContext('experimental-webgl');
+  } catch (e){
+  }
+  
+  if (gl) {
+    setupWebGL();
+    initShaders();
+    setupBuffer();
+    drawScene();
+  } else {
+    alert('브라우저 지원안함');
+  }
+  
+  function setupWebGL() {
+    // 클리어 색상을 녹색으로 설정
+    gl.clearColor(0.1, 0.5, 0.1, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  
+  function initShaders() {
+   
+    var vs_source = document.getElementById('shader-vs');
+    var fs_source = document.getElementById('shader-fs');
+    
+    // 셰이더 컴파일
+    vertexShader = makeShader(vs_source.innerHTML, gl.VERTEX_SHADER);
+    fragmentShader = makeShader(fs_source.innerHTML, gl.FRAGMENT_SHADER);
+    
+    // 프로그램 생성
+    // 프로그램은 vertexShader,fragmentShader 두쌍을 합쳐서 프로그램이라고 한다.
+    glProgram = gl.createProgram();
+    
+    // 프로그램에 셰이더 첨부 및 연결
+    gl.attachShader(glProgram, vertexShader);
+    gl.attachShader(glProgram, fragmentShader);
+    gl.linkProgram(glProgram);
+    
+    // 프로그램을 사용
+    // WebGL이 이 프로그램을 사용가능하게함
+    gl.useProgram(glProgram);
+  }
+  
+  function setupBuffer (){
+    var triangleVertices = [
+        // 왼쪽 삼각형
+        -0.5, 0.5, 0.0,
+         0.0, 0.0, 0.0,
+        -0.5, -0.5, 0.0,
+
+        // 오른쪽 삼각형
+        0.5, 0.5, 0.0,
+        0.0, 0.0, 0.0,
+        0.5, -0.5, 0.0
+      ];
+    // 공간 좌표 (x,y,z)이고 값은 캔버스 크기로부터 -1~1 까지 표현된다.
+    triangleVerticeBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticeBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW
+    );
+  }
+  
+  function drawScene (){
+    vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
+    gl.enableVertexAttribArray(vertexPositionAttribute);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticeBuffer);
+    gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+  
+  function makeShader(src, type) {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
+    return shader;
+  }
+}
+    </script>
+</body>
+</html>                              
